@@ -131,6 +131,17 @@ def shiftrows(data, inverse):
             idx = (idx +  5) % 16
     return ret
 
+RC = (BitArray(hex = '0x0000000000000000'),
+      BitArray(hex = '0x13198a2e03707344'),
+      BitArray(hex = '0xa4093822299f31d0'),
+      BitArray(hex = '0x082efa98ec4e6c89'))
+
+S = ('0xb', '0xf', '0x3', '0x2', '0xa', '0xc', '0x9', '0x1',
+     '0x6', '0x7', '0x8', '0x0', '0xe', '0x5', '0xd', '0x4')
+
+Sinv = ('0xb', '0x7', '0x3', '0x2', '0xf', '0xd', '0x8', '0x9',
+        '0xa', '0x6', '0x4', '0x0', '0x5', '0xe', '0xc', '0x1')
+
 def test():
     testvector1p = BitArray(hex = '0x0000000000000000')
     testvector1k = BitArray(hex = '0x00000000000000000000000000000000')
@@ -163,9 +174,7 @@ def test():
     print('Testvector 6의 암호문 :', Prince_Enc(testvector6p, testvector6k))
     print('Testvector 6의 평문   :', Prince_Dec(testvector6c, testvector6k))
     
-def READ():
-    global pt, ct
-    
+def READ(pt, ct):
     f = open('pt.dat', 'rb')
     data = BitArray(f.read())
     for i in range(len(data) // 64):
@@ -183,76 +192,6 @@ def READ():
             tmp.append(data[64 * i + 64 - 8 * (j + 1):64 * i + 64 - 8 * j])
         ct.append(tmp)
     f.close()
-    
-RC = (BitArray(hex = '0x0000000000000000'),
-      BitArray(hex = '0x13198a2e03707344'),
-      BitArray(hex = '0xa4093822299f31d0'),
-      BitArray(hex = '0x082efa98ec4e6c89'))
 
-S = ('0xb', '0xf', '0x3', '0x2', '0xa', '0xc', '0x9', '0x1',
-     '0x6', '0x7', '0x8', '0x0', '0xe', '0x5', '0xd', '0x4')
-
-Sinv = ('0xb', '0x7', '0x3', '0x2', '0xf', '0xd', '0x8', '0x9',
-        '0xa', '0x6', '0x4', '0x0', '0x5', '0xe', '0xc', '0x1')
-
-def find_k0(k0prime):
-    k0 = k0prime << 1
-    if k0prime[0]:
-        k0 = k0 ^ BitArray('0x0000000000000001')
-    if k0[0]:
-        k0 = k0 ^ BitArray('0x0000000000000002')
-    return k0
-
-if __name__ == "__main__":
-    '''
-    ###SETTING
-    pt, ct = [], []
-    READ()
-    '''
-
-    '''
-    ### FIND K1 ^ K0PRIME
-    ### k1 ^ k0prime = 0xc15a4bc85555484b
-    new_ct = []
-    for i in range(0, 80*256):
-        new_ct.append(ct[i] ^ RC[3])
-    
-    for i in range(16):
-        for j in range(16):
-            summ = BitArray('0x0')
-            for k in range(80*256):
-                summ = summ ^ S[int((new_ct[k][4 * i:4 * (i + 1)] ^ BitArray(str(hex(j)))).hex, 16)]
-            if summ == BitArray('0x0'):
-                print(i, hex(j))
-    '''
-
-    '''                                                                     
-    ### BRUTE FORCE
-    ### k0 = 0x687a717a7a6c7073
-    ### k1 = 0x7567737568637072
-    a = [BitArray('0x61'), BitArray('0x62'), BitArray('0x63'), BitArray('0x64'), BitArray('0x65'), BitArray('0x66'), BitArray('0x67'), BitArray('0x68'),
-         BitArray('0x69'), BitArray('0x6a'), BitArray('0x6b'), BitArray('0x6c'), BitArray('0x6d'), BitArray('0x6e'), BitArray('0x6f')]
-    b = [BitArray('0x70'), BitArray('0x71'), BitArray('0x72'), BitArray('0x73'), BitArray('0x74'), BitArray('0x75'),
-         BitArray('0x76'), BitArray('0x77'), BitArray('0x78'), BitArray('0x79'), BitArray('0x7a')]
-
-    i1 = BitArray('0x70')
-    i2 = BitArray('0x61')
-    for i3 in b:
-        for i4 in b:
-            for i5 in a:
-                for i6 in a:
-                    for i7 in b:
-                        for i8 in b:
-                            k1 = i1 + i2 + i3 + i4 + i5 + i6 + i7 + i8
-                            k0prime = k1 ^ BitArray('0xc15a4bc85555484b')
-                            k0 = find_k0(k0prime)
-                            if Prince_Enc(pt0, k0 + k1) == ct0:
-                                print(k0, k1)
-    '''
-
-    '''
-    ### CHECK
-    for i in range(len(pt)):
-        if Prince_Enc(pt[i], k0 + k1) != ct[i]:
-            print(i)
-    '''
+pt, ct = [], []
+READ(pt, ct)
